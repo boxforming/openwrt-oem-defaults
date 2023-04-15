@@ -36,6 +36,14 @@ mtd_get_cstring () {
 	echo $cstring
 }
 
+set_factory_root_password () {
+	factory_root_password=$1
+	root_shadow=$(cat /etc/shadow | grep '^root' | cut -d ':' -f 2)
+	if [ "x$root_shadow" == "x" -a "x$factory_root_password" != "x" ] ; then
+		echo -e "$factory_root_password\n$factory_root_password" | passwd root
+	fi
+}
+
 apply_factory_defaults () {
 	local board=$(get_board_name)
 
@@ -48,6 +56,9 @@ apply_factory_defaults () {
 
             wlan_enc="psk2"
             wlan_country="RU"
+
+            serial_number=$(mtd_get_cstring factory 0x21010)
+            root_password="$serial_number"
 
 			wlan_5ghz_ssid="${wlan_ssid:0:8}5${wlan_ssid:9}"
 		else
@@ -66,6 +77,7 @@ apply_factory_defaults () {
 			local v="${kv#*=}"
 			if [[ "$k" == "SN" ]] ; then
 				serial_number="$v"
+                root_password="$v"
 				wlan_key="$v"
 
 			elif [[ "$k" == "wl0_ssid" ]] ; then
@@ -114,6 +126,10 @@ set wireless.@wifi-iface[1].ft_over_ds '0'
 commit wireless
 EOI
 
+	fi
+
+    if [ ! -z "$root_password" ] ; then
+		set_factory_root_password "$root_password"
 	fi
 
 }
