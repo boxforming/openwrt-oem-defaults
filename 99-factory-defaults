@@ -1,0 +1,127 @@
+#!/bin/sh
+
+# https://www.mail-archive.com/openwrt-devel@lists.openwrt.org/msg49377.html
+# https://gist.github.com/apla/a81cad0a1dc9fedfeff19941116da369
+# https://openwrt.org/docs/guide-developer/uci-defaults
+# for sercomm: copy to target/linux/ramips/mt7621/base-files/etc/uci-defaults/99-factory-defaults
+# for ax3600:  copy to target/linux/ipq807x/base-files/etc/uci-defaults/99-factory-defaults
+
+. /lib/functions.sh
+. /lib/functions/system.sh
+
+get_board_name () {
+	cat /proc/device-tree/compatible | tr -s '\000' '\n' | head -n 1
+}
+
+mtd_get_cstring () {
+	local mtdname="$1"
+	local offset=$(($2))
+	local part
+	local mac_dirty
+	
+	part=$(find_mtd_part "$mtdname")
+
+	if [ -z "$part" ]; then
+		echo "mtd_get_cstring: partition $mtdname not found!" >&2
+		return
+	fi
+
+	if [ -z "$offset" ]; then
+		echo "mtd_get_cstring: offset missing" >&2
+		return
+	fi
+
+	cstring=$(dd if="$part" skip="$offset" count=1 bs=32b iflag=skip_bytes 2>/dev/null | tr -s '\000' '\n' | head -n1)
+
+	echo $cstring
+}
+
+apply_factory_defaults () {
+	local board=$(get_board_name)
+
+	case $board in
+	beeline,smartbox-turbo-plus)
+		
+		wlan_ssid=$(mtd_get_cstring factory 0x21080)
+		if [ "$wlan_ssid" != "${wlan_ssid#Beeline}" ] ; then
+			wlan_key=$(mtd_get_cstring factory 0x210a0)
+
+            wlan_enc="psk2"
+            wlan_country="RU"
+
+			wlan_5ghz_ssid="${wlan_ssid:0:8}5${wlan_ssid:9}"
+		else
+			wlan_ssid=
+		fi
+		;;
+	xiaomi,ax3600)
+	# qcom,ipq807x-ac04) # xiaomi openwrt board id
+		
+		local offset="0x4"
+
+		while true ;  do
+			local kv=$(mtd_get_cstring bdata "$offset")
+			[[ ! -z "$kv" ]] || break
+			local k="${kv%=*}"
+			local v="${kv#*=}"
+			if [[ "$k" == "SN" ]] ; then
+				serial_number="$v"
+				wlan_key="$v"
+
+			elif [[ "$k" == "wl0_ssid" ]] ; then
+				wlan_5ghz_ssid="$v"
+			elif [[ "$k" == "wl1_ssid" ]] ; then
+				wlan_ssid="$v"
+			elif [[ "$k" == "CountryCode" ]] ; then
+				wlan_country="$v"
+			fi
+			offset=$(( $offset + ${#kv} + 1 ))
+		done
+		;;
+	esac
+
+	if [ ! -z "$wlan_ssid" ] ; then
+		uci -q batch << EOI
+
+set wireless.@wifi-device[0].disabled='0'
+set wireless.@wifi-device[0].country='${wlan_country}'
+
+set wireless.@wifi-iface[0].ssid='${wlan_ssid}'
+set wireless.@wifi-iface[0].encryption='${wlan_enc}'
+set wireless.@wifi-iface[0].key='${wlan_key}'
+set wireless.@wifi-iface[0].network='lan'
+
+set wireless.@wifi-iface[0].ieee80211r='1'
+set wireless.@wifi-iface[0].mobility_domain='fe24'
+set wireless.@wifi-iface[0].ft_psk_generate_local='1'
+set wireless.@wifi-iface[0].reassociation_deadline '20000'
+set wireless.@wifi-iface[0].ft_over_ds '0'
+
+set wireless.@wifi-device[1].disabled='0'
+set wireless.@wifi-device[1].country='${wlan_country}'
+
+set wireless.@wifi-iface[1].ssid='${wlan_5ghz_ssid}'
+set wireless.@wifi-iface[1].encryption='${wlan_enc}'
+set wireless.@wifi-iface[1].key='${wlan_key}'
+set wireless.@wifi-iface[1].network='lan'
+
+set wireless.@wifi-iface[1].ieee80211r='1'
+set wireless.@wifi-iface[1].mobility_domain='fe58'
+set wireless.@wifi-iface[1].ft_psk_generate_local='1'
+set wireless.@wifi-iface[1].reassociation_deadline '20000'
+set wireless.@wifi-iface[1].ft_over_ds '0'
+
+commit wireless
+EOI
+
+	fi
+
+}
+
+wifi config
+
+apply_factory_defaults
+
+wifi
+
+exit 0
