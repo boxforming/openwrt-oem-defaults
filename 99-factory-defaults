@@ -45,6 +45,10 @@ set_factory_root_password () {
 }
 
 apply_factory_defaults () {
+	wlan_country="JP"
+	wlan_enc="psk2"
+	wlan_2ghz_id=0
+
 	local board=$(get_board_name)
 
 	case $board in
@@ -54,13 +58,10 @@ apply_factory_defaults () {
 		if [ "$wlan_ssid" != "${wlan_ssid#Beeline}" ] ; then
 			wlan_key=$(mtd_get_cstring factory 0x210a0)
 
-            wlan_enc="psk2"
-            wlan_country="RU"
-
-            serial_number=$(mtd_get_cstring factory 0x21010)
-            root_password="$serial_number"
-
 			wlan_5ghz_ssid="${wlan_ssid:0:8}5${wlan_ssid:9}"
+
+			serial_number=$(mtd_get_cstring factory 0x21010)
+			root_password="$serial_number"
 		else
 			wlan_ssid=
 		fi
@@ -68,6 +69,8 @@ apply_factory_defaults () {
 	xiaomi,ax3600)
 	# qcom,ipq807x-ac04) # xiaomi openwrt board id
 		
+		wlan_2ghz_id=2
+
 		local offset="0x4"
 
 		while true ;  do
@@ -84,6 +87,7 @@ apply_factory_defaults () {
 				wlan_5ghz_ssid="$v"
 			elif [[ "$k" == "wl1_ssid" ]] ; then
 				wlan_ssid="$v"
+				uci set wireless.@wifi-iface[0].ssid=${v}_IoT
 			elif [[ "$k" == "CountryCode" ]] ; then
 				wlan_country="$v"
 			fi
@@ -95,19 +99,19 @@ apply_factory_defaults () {
 	if [ ! -z "$wlan_ssid" ] ; then
 		uci -q batch << EOI
 
-set wireless.@wifi-device[0].disabled='0'
-set wireless.@wifi-device[0].country='${wlan_country}'
+set wireless.@wifi-device[${wlan_2ghz_id}].disabled='0'
+set wireless.@wifi-device[${wlan_2ghz_id}].country='${wlan_country}'
 
-set wireless.@wifi-iface[0].ssid='${wlan_ssid}'
-set wireless.@wifi-iface[0].encryption='${wlan_enc}'
-set wireless.@wifi-iface[0].key='${wlan_key}'
-set wireless.@wifi-iface[0].network='lan'
+set wireless.@wifi-iface[${wlan_2ghz_id}].ssid='${wlan_ssid}'
+set wireless.@wifi-iface[${wlan_2ghz_id}].encryption='${wlan_enc}'
+set wireless.@wifi-iface[${wlan_2ghz_id}].key='${wlan_key}'
+set wireless.@wifi-iface[${wlan_2ghz_id}].network='lan'
 
-set wireless.@wifi-iface[0].ieee80211r='1'
-set wireless.@wifi-iface[0].mobility_domain='fe24'
-set wireless.@wifi-iface[0].ft_psk_generate_local='1'
-set wireless.@wifi-iface[0].reassociation_deadline '20000'
-set wireless.@wifi-iface[0].ft_over_ds '0'
+set wireless.@wifi-iface[${wlan_2ghz_id}].ieee80211r='1'
+set wireless.@wifi-iface[${wlan_2ghz_id}].mobility_domain='fe24'
+set wireless.@wifi-iface[${wlan_2ghz_id}].ft_psk_generate_local='1'
+set wireless.@wifi-iface[${wlan_2ghz_id}].reassociation_deadline '20000'
+set wireless.@wifi-iface[${wlan_2ghz_id}].ft_over_ds '0'
 
 set wireless.@wifi-device[1].disabled='0'
 set wireless.@wifi-device[1].country='${wlan_country}'
