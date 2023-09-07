@@ -1,4 +1,4 @@
-xiaomi__ax3600 () {
+get_oem_data_xiaomi__ax3600 () {
 		
     local part="bdata"
 
@@ -22,10 +22,13 @@ xiaomi__ax3600 () {
 		elif [[ "$k" == "wl1_ssid" ]] ; then
 			wlan_ssid="$v"
 			hostname="$v"
-			uci set wireless.@wifi-iface[0].ssid=${v}_IoT
 		elif [[ "$k" == "CountryCode" ]] ; then
 			wlan_country="$v"
 		fi
 		offset=$(( $offset + ${#kv} + 1 ))
 	done
+}
+
+fixup_xiaomi__ax3600 () {
+	uci set wireless.@wifi-iface[0].ssid=${wlan_ssid}_IoT
 }
