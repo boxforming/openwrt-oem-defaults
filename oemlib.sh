@@ -7,10 +7,11 @@ get_model_name () {
 	cat /proc/device-tree/compatible | tr -s '\000' '\n' | head -n 1
 }
 
-get_parser_fn () {
+get_oem_data_parser () {
 	local brd=$(get_model_name)
-	local brdm=${brd//,/__}
-	echo "${brdm//-/_}"
+	brd=${brd//,/__}
+	brd=${brd//\//_}
+	echo "get_oem_data_${brd//-/_}"
 }
 
 get_mtd_cstr () {
@@ -44,63 +45,68 @@ set_factory_root_password () {
 	fi
 }
 
-check_config () {
-	local verbose=${1}
-	wlan_country="JP"
-	wlan_enc="psk2"
+get_device_oem_data () {
 
-	local model_name=$(get_model_name)
-	local parser=$(get_parser_fn)
+	model_name=$(get_model_name)
 
-	[ $verbose ] && echo "Model name: ${model_name}"
+	local parser=$(get_oem_data_parser)
 
-	. "/tmp/${model_name}.sh"
-
-	[ $verbose ] && echo "Parser function name: ${parser}"
+	if [[ $(type -t $parser || echo fail) != "$parser" ]] ; then
+		. "/tmp/${model_name//\//-}.sh"
+	fi
 
 	set -e
 
 	$parser
 
-	[ $verbose ] && echo "Hostname: ${hostname}"
-	[ $verbose ] && echo "WiFi 2.4GHz radio #${wlan_phy_id}"
-	[ $verbose ] && echo "WiFi 2.4GHz SSID: ${wlan_ssid}"
-	if [[ ! -z "${wlan_5ghz_ssid}" ]] ; then
-		[ $verbose ] && echo "WiFi 5GHz radio #${wlan_5ghz_phy_id}"
-		[ $verbose ] && echo "WiFi 5GHz SSID: ${wlan_5ghz_ssid}"
-	fi
-	if [[ ! -z "${serial_number}" ]] ; then
-		[ $verbose ] && echo "Serial number: ${serial_number}"
+	set +e
+}
+
+info () {
+	msg=$1
+	[ $VERBOSE ] && echo "$msg"
+}
+
+check_config () {
+
+	set -u
+
+	info "WiFi regulatory country/domain: ${wlan_country}"
+
+	get_device_oem_data
+
+	info "Model name: ${model_name}"
+
+	if [[ -z $root_password ]] ; then
+		info "Error: root password is undefined"
+		exit 1
 	fi
 
-    if [[ -z $hostname || -z $wlan_ssid || -z $wlan_phy_id || -z $wlan_key || -z $root_password ]] ; then
-        echo "Some requires variables are not defined"
-        exit 1
-    fi
+	info "Hostname: ${hostname}"
 
-    if [[ ! -z $wlan_5ghz_ssid ]] ; then
-        if [[ -z $wlan_5ghz_phy_id ]] ; then
-            echo "Some requires variables are not defined"
-            exit 2
-        fi
-    fi
+	if [[ -z $wlan_key ]] ; then
+		info "Error: missing wlan key"
+		exit 2
+	fi
+	info "WiFi 2.4GHz radio #${wlan_phy_id}"
+	info "WiFi 2.4GHz SSID: ${wlan_ssid}/${wlan_enc}"
+
+	if [[ ! -z $wlan_5ghz_ssid ]] ; then
+		info "WiFi 5GHz radio #${wlan_5ghz_phy_id}"
+		info "WiFi 5GHz SSID: ${wlan_5ghz_ssid}/${wlan_5ghz_ssid:-$wlan_enc}"
+	fi
+	if [[ ! -z $serial_number ]] ; then
+		info "Serial number: ${serial_number}"
+	fi
+
+	set +u
 
 }
 
 
 show_config () {
-	local model_name=$(get_model_name)
-	local parser=$(get_parser_fn)
 
-	echo "Model name: ${model_name}"
-
-	. "/tmp/${model_name}.sh"
-
-	echo "Parser function name: ${parser}"
-
-	set -e
-
-	$parser
+	get_device_oem_data
 
 	echo "Hostname: ${hostname}"
 	echo "WiFi SSID: ${wlan_ssid}"
@@ -112,15 +118,52 @@ show_config () {
 	fi
 }
 
-get_device_config () {
+apply_factory_defaults () {
 
-	model_name=$(get_model_name)
+	check_config
 
-	. "/tmp/${model_name}.sh"
+	if [[ ! -z $wlan_ssid ]] && uci get "wireless.@wifi-device[${wlan_phy_id}]" && uci get "wireless.@wifi-device[${wlan_phy_id}].disabled" ; then
+		uci -q batch << EOI
+set wireless.@wifi-device[${wlan_phy_id}].disabled='0'
+set wireless.@wifi-device[${wlan_phy_id}].country='${wlan_country}'
 
-	local parser=$(get_parser_fn)
+set wireless.@wifi-iface[${wlan_phy_id}].ssid='${wlan_ssid}'
+set wireless.@wifi-iface[${wlan_phy_id}].encryption='${wlan_enc}'
+set wireless.@wifi-iface[${wlan_phy_id}].key='${wlan_key}'
+set wireless.@wifi-iface[${wlan_phy_id}].network='lan'
 
-	$parser
+set wireless.@wifi-iface[${wlan_phy_id}].ieee80211r='1'
+EOI
+	fi
+
+	if [[ ! -z $wlan_5ghz_ssid ]] && uci get "wireless.@wifi-device[${wlan_5ghz_phy_id}]" && uci get "wireless.@wifi-device[${wlan_5ghz_phy_id}].disabled" ; then
+		uci -q batch << EOI
+set wireless.@wifi-device[${wlan_5ghz_phy_id}].disabled='0'
+set wireless.@wifi-device[${wlan_5ghz_phy_id}].country='${wlan_country}'
+
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ssid='${wlan_5ghz_ssid}'
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].encryption='${wlan_5ghz_enc:-$wlan_enc}'
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].key='${wlan_5ghz_key:-$wlan_key}'
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].network='lan'
+
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ieee80211r='1'
+EOI
+	fi
+
+	# uci commit wireless
+
+	if [[ ! -z $root_password ]] ; then
+		set_factory_root_password "$root_password"
+	fi
+
+	if [[ ! -z $hostname ]] ; then
+		uci set system.@system[0].hostname="${hostname}"
+		# uci commit system
+		echo "${hostname}" > /proc/sys/kernel/hostname
+		/etc/init.d/system restart
+	fi
+
+
 }
 
 apply_factory_defaults_ () {
@@ -198,41 +241,43 @@ apply_factory_defaults_ () {
 		;; # dynalink,dl-wrx36
 	esac
 
-	if [ ! -z "$wlan_ssid" ] ; then
+	if [ ! -z "$wlan_ssid" -a uci get 'wireless.@wifi-device[2]' -a ] ; then
 		uci -q batch << EOI
-set wireless.@wifi-device[${wlan_2ghz_id}].disabled='0'
-set wireless.@wifi-device[${wlan_2ghz_id}].country='${wlan_country}'
+set wireless.@wifi-device[${wlan_phy_id}].disabled='0'
+set wireless.@wifi-device[${wlan_phy_id}].country='${wlan_country}'
 
-set wireless.@wifi-iface[${wlan_2ghz_id}].ssid='${wlan_ssid}'
-set wireless.@wifi-iface[${wlan_2ghz_id}].encryption='${wlan_enc}'
-set wireless.@wifi-iface[${wlan_2ghz_id}].key='${wlan_key}'
-set wireless.@wifi-iface[${wlan_2ghz_id}].network='lan'
+set wireless.@wifi-iface[${wlan_phy_id}].ssid='${wlan_ssid}'
+set wireless.@wifi-iface[${wlan_phy_id}].encryption='${wlan_enc}'
+set wireless.@wifi-iface[${wlan_phy_id}].key='${wlan_key}'
+set wireless.@wifi-iface[${wlan_phy_id}].network='lan'
 
-set wireless.@wifi-iface[${wlan_2ghz_id}].ieee80211r='1'
-set wireless.@wifi-iface[${wlan_2ghz_id}].mobility_domain='fe24'
-set wireless.@wifi-iface[${wlan_2ghz_id}].ft_psk_generate_local='1'
-set wireless.@wifi-iface[${wlan_2ghz_id}].reassociation_deadline '20000'
-set wireless.@wifi-iface[${wlan_2ghz_id}].ft_over_ds '0'
-
-set wireless.@wifi-device[${wlan_5ghz_id}].disabled='0'
-set wireless.@wifi-device[${wlan_5ghz_id}].country='${wlan_country}'
-
-set wireless.@wifi-iface[${wlan_5ghz_id}].ssid='${wlan_5ghz_ssid}'
-set wireless.@wifi-iface[${wlan_5ghz_id}].encryption='${wlan_enc}'
-set wireless.@wifi-iface[${wlan_5ghz_id}].key='${wlan_key}'
-set wireless.@wifi-iface[${wlan_5ghz_id}].network='lan'
-
-set wireless.@wifi-iface[${wlan_5ghz_id}].ieee80211r='1'
-set wireless.@wifi-iface[${wlan_5ghz_id}].mobility_domain='fe58'
-set wireless.@wifi-iface[${wlan_5ghz_id}].ft_psk_generate_local='1'
-set wireless.@wifi-iface[${wlan_5ghz_id}].reassociation_deadline '20000'
-set wireless.@wifi-iface[${wlan_5ghz_id}].ft_over_ds '0'
-
-commit wireless
+set wireless.@wifi-iface[${wlan_phy_id}].ieee80211r='1'
 EOI
 	fi
+
+	if [ ! -z "$wlan_5ghz_ssid" ] ; then
+		uci -q batch << EOI
+set wireless.@wifi-device[${wlan_5ghz_phy_id}].disabled='0'
+set wireless.@wifi-device[${wlan_5ghz_phy_id}].country='${wlan_country}'
+
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ssid='${wlan_5ghz_ssid}'
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].encryption='${wlan_enc}'
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].key='${wlan_5ghz_key:-$wlan_key}'
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].network='lan'
+
+set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ieee80211r='1'
+EOI
+	fi
+
+	uci commit wireless
 
 	if [ ! -z "$root_password" ] ; then
 		set_factory_root_password "$root_password"
 	fi
 }
+
+# we probably don't need that for 802.11r
+# set wireless.@wifi-iface[${wlan_phy_id}].mobility_domain='fe24'
+# set wireless.@wifi-iface[${wlan_phy_id}].ft_psk_generate_local='1'
+# set wireless.@wifi-iface[${wlan_phy_id}].reassociation_deadline '20000'
+# set wireless.@wifi-iface[${wlan_phy_id}].ft_over_ds '0'
