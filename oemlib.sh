@@ -63,48 +63,6 @@ get_device_oem_data () {
 	set +e
 }
 
-info () {
-	msg=$1
-	[ $VERBOSE ] && echo "$msg"
-}
-
-check_config () {
-
-	set -u
-
-	info "WiFi regulatory country/domain: ${wlan_country}"
-
-	get_device_oem_data
-
-	info "Model name: ${model_name}"
-
-	if [[ -z $root_password ]] ; then
-		info "Error: root password is undefined"
-		exit 1
-	fi
-
-	info "Hostname: ${hostname}"
-
-	if [[ -z $wlan_key ]] ; then
-		info "Error: missing wlan key"
-		exit 2
-	fi
-	info "WiFi 2.4GHz radio #${wlan_phy_id}"
-	info "WiFi 2.4GHz SSID: ${wlan_ssid}/${wlan_enc}"
-
-	if [[ ! -z $wlan_5ghz_ssid ]] ; then
-		info "WiFi 5GHz radio #${wlan_5ghz_phy_id}"
-		info "WiFi 5GHz SSID: ${wlan_5ghz_ssid}/${wlan_5ghz_ssid:-$wlan_enc}"
-	fi
-	if [[ ! -z $serial_number ]] ; then
-		info "Serial number: ${serial_number}"
-	fi
-
-	set +u
-
-}
-
-
 show_config () {
 
 	get_device_oem_data
@@ -120,8 +78,6 @@ show_config () {
 }
 
 apply_factory_defaults () {
-
-	check_config
 
 	if [[ ! -z $wlan_ssid ]] && uci get "wireless.@wifi-device[${wlan_phy_id}]" && uci get "wireless.@wifi-device[${wlan_phy_id}].disabled" ; then
 		uci -q batch << EOI
@@ -282,3 +238,40 @@ EOI
 # set wireless.@wifi-iface[${wlan_phy_id}].ft_psk_generate_local='1'
 # set wireless.@wifi-iface[${wlan_phy_id}].reassociation_deadline '20000'
 # set wireless.@wifi-iface[${wlan_phy_id}].ft_over_ds '0'
+
+info () {
+	[ $VERBOSE ] && echo "$1"
+}
+
+insecure () {
+	[ $VERBOSE ] && [ $INSECURE ] && echo "$1"
+}
+
+check_config () {
+
+	set -u
+
+	info "WiFi regulatory country/domain: ${wlan_country}"
+
+	info "Model name: ${model_name}"
+
+	insecure "Root password: ${root_password}"
+
+	info "Hostname: ${hostname}"
+
+	info "WiFi radio #${wlan_phy_id}:"
+	info "WiFi SSID: ${wlan_ssid} [${wlan_enc}]"
+	insecure "WiFi key: ${wlan_key}"
+
+	if [[ ! -z $wlan_5ghz_ssid ]] ; then
+		info "WiFi 5GHz radio #${wlan_5ghz_phy_id}"
+		info "WiFi 5GHz SSID: ${wlan_5ghz_ssid} [${wlan_5ghz_enc:-$wlan_enc}]"
+		insecure "WiFi 5GHz key: ${wlan_5ghz_key:-$wlan_key}"
+	fi
+	if [[ ! -z $serial_number ]] ; then
+		info "Serial number: ${serial_number}"
+	fi
+
+	set +u
+
+}
