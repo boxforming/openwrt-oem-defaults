@@ -17,22 +17,23 @@ get_oem_data_parser () {
 get_mtd_cstr () {
 	local mtdname="$1"
 	local offset=$(($2))
+	local limit=$((${3:-32}))
 	local part
 	local mac_dirty
 	
 	part=$(find_mtd_part "$mtdname")
 
-	if [ -z "$part" ]; then
+	if [[ -z $part ]]; then
 		echo "get_mtd_cstr: partition $mtdname not found!" >&2
 		return
 	fi
 
-	if [ -z "$offset" ]; then
+	if [[ -z $offset ]]; then
 		echo "get_mtd_cstr: offset missing" >&2
 		return
 	fi
 
-	cstring=$(dd if="$part" skip="$offset" count=1 bs=32b iflag=skip_bytes 2>/dev/null | tr -s '\000' '\n' | head -n1)
+	cstring=$(dd if="$part" skip="$offset" count=1 bs="$limit" iflag=skip_bytes 2>/dev/null | tr -s '\000' '\n' | head -n1)
 
 	echo $cstring
 }
