@@ -106,6 +106,9 @@ EOI
 		/etc/init.d/system restart
 	fi
 
+	if [[ -f /usr/bin/wireguard_watchdog ]] ; then
+		echo '* * * * * /usr/bin/wireguard_watchdog' >> /etc/crontabs/root
+	fi
 
 }
 
