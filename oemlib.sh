@@ -93,7 +93,7 @@ set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ieee80211r='1'
 EOI
 	fi
 
-	# uci commit wireless
+	uci commit wireless
 
 	if [[ ! -z $root_password ]] ; then
 		set_factory_root_password "$root_password"
