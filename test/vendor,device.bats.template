@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+load ../oemlib.sh
+
+# TODO: fill vendor and device from /proc/device-tree/compatible
+vendor_name="vendor"
+device_name="device"
+model_name="${vendor_name},${device_name}"
+
+find_mtd_part () {
+    echo "test/${model_name}.dump"
+}
+
+@test "factory data check for $vendor_name $device_name" {
+
+    local parser_fn_name="$(get_oem_data_parser "$model_name")"
+
+    local parser_filename="parsers/$(get_filename_from_model_name "$model_name").sh"
+
+    . "$parser_filename"
+
+    set -e
+
+    $parser_fn_name
+
+    # TODO: remove or uncomment next line after test pass
+    echo "$(wlan_country="US" wlan_enc="psk2" VERBOSE=1 INSECURE=1 check_config)"
+
+    [ "$wlan_ssid" = "XXX" ]
+    [ "$hostname"  = "XXX" ]
+    [ "$wlan_5ghz_ssid" = "XXX" ]
+    
+    [ "$root_password" = "RRR" ]
+    [ "$serial_number" = "SSS" ]
+    [ "$wlan_key"      = "WWW" ]
+
+    set +e
+}
