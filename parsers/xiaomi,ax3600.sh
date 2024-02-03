@@ -1,6 +1,6 @@
 get_oem_data_xiaomi__ax3600 () {
 		
-    local part="bdata"
+    local part="bdata" # mtd9
 
     wlan_phy_id=2
     wlan_5ghz_phy_id=1
@@ -8,8 +8,8 @@ get_oem_data_xiaomi__ax3600 () {
 	local offset="0x4"
 
 	while true ;  do
-		local kv=$(get_mtd_cstr "$part" "$offset")
-		[[ ! -z "$kv" ]] || break
+		local kv="$(get_mtd_cstr "$part" "$offset" 512)"
+		[[ -n $kv ]] || break
 		local k="${kv%=*}"
 		local v="${kv#*=}"
 		if [[ "$k" == "SN" ]] ; then
