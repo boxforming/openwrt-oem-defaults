@@ -22,7 +22,7 @@ jobs:
 
       - name: Generate models.json
         run: |
-          models=$(find parsers -maxdepth 1 -name "*.sh" -printf '\t"%f",\n' | sed 's/\.sh",/,",/g')
+          models=$(find parsers -maxdepth 1 -name "*.sh" -printf '\t"%f",\n' | sed 's/\.sh",/",/g')
           models="${models%,*}" # Remove the trailing comma and newline
-          echo "[\n$models\n]" > models.json
+          printf '[\n%b\n]' "$models" > models.json
           cat models.json
