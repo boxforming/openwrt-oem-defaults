@@ -38,7 +38,6 @@ jobs:
           path: _site
       - name: Generate models.json
         run: |
-          mkdir _site
           models=$(find parsers -maxdepth 1 -name "*.sh" -printf '\t"%f",\n' | sort | sed 's/\.sh",/",/g')
           models="${models%,*}" # Remove the trailing comma and newline
           printf '[\n%b\n]' "$models" > _site/models.json
