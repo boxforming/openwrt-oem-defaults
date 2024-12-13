@@ -1,4 +1,4 @@
-name: Bats Tests
+name: Testing using bats
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  bats-tests:
+  test-bats:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -19,3 +19,10 @@ jobs:
 
       - name: Run Bats tests
         run: bats test/*.bats # Or the path to your Bats tests
+
+      - name: Generate models.json
+        run: |
+          models=$(find parsers -maxdepth 1 -name "*.sh" -printf '\t"%f",\n' | sed 's/\.sh",/,",/g')
+          models="${models%,*}" # Remove the trailing comma and newline
+          echo "[\n$models\n]" > models.json
+          cat models.json
