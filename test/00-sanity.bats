@@ -2,9 +2,7 @@
 
 load ../oemlib.sh
 
-find_mtd_part () {
-    echo "README.md"
-}
+load ../lib/test.sh
 
 @test "sanity check: parser function name" {
 

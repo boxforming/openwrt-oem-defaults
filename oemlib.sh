@@ -2,10 +2,18 @@ get_model_name () {
 	cat /proc/device-tree/compatible | tr -s '\000' '\n' | head -n 1
 }
 
+get_model_function_suffix () {
+	local suffix="${1:-$(get_model_name)}"
+	suffix="${suffix//[\/-]/_}"
+	echo "${suffix//,/__}"
+}
+
 get_oem_data_parser () {
-	local brd="${1:-$(get_model_name)}"
-	brd="${brd//[\/-]/_}"
-	echo "get_oem_data_${brd//,/__}"
+	echo "get_oem_data_$(get_model_function_suffix "$1")"
+}
+
+get_fixup_function () {
+	echo "fixup_$(get_model_function_suffix "$1")"
 }
 
 get_mtd_cstr () {
@@ -24,6 +32,9 @@ get_mtd_cstr () {
 
 set_factory_root_password () {
 	local factory_root_password="$1"
+	if [[ -z "$factory_root_password" ]] ; then
+		return
+	fi
 	local root_shadow=$(grep '^root' /etc/shadow | cut -d ':' -f 2)
 	if [[ -z $root_shadow ]] && [[ -n $factory_root_password ]] ; then
 		echo -e "$factory_root_password\n$factory_root_password" | passwd root
@@ -75,8 +86,13 @@ EOI
 
 	uci commit wireless
 
-	if [[ -n $root_password ]] ; then
-		set_factory_root_password "$root_password"
-	fi
+	set_factory_root_password "$root_password"
 
+}
+
+apply_fixup () {
+    local fixup_function="$(get_fixup_function)"
+    if [[ $(type -t $fixup_function || echo fail) == "$fixup_function" ]] ; then
+        $fixup_function
+    fi
 }

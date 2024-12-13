@@ -7,9 +7,7 @@ vendor_name="vendor"
 device_name="device"
 model_name="${vendor_name},${device_name}"
 
-find_mtd_part () {
-    echo "test/${model_name}.dump"
-}
+load ../lib/test.sh
 
 @test "factory data check for $vendor_name $device_name" {
 
