@@ -4,8 +4,8 @@ get_oem_data_dynalink__dl_wrx36 () {
 	local part="0:art" # mtd17
 
 	# iw phy0 info | egrep '\* 5\d\d\d MHz'
-	wlan_phy_id=2
-	wlan_5ghz_phy_id=1
+	wlan_phy_id=1
+	wlan_5ghz_phy_id=0
 
 	wlan_ssid="$(get_mtd_cstr "$part" 0x301C0)"
 	if [[ "$wlan_ssid" != "${wlan_ssid#Dynalink}" ]] ; then

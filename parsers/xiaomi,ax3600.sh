@@ -9,7 +9,7 @@ get_oem_data_xiaomi__ax3600 () {
 
 	while true ;  do
 		local kv="$(get_mtd_cstr "$part" "$offset" 512)"
-		[[ -n $kv ]] || break
+		[[ -n "$kv" ]] || break
 		local k="${kv%=*}"
 		local v="${kv#*=}"
 		if [[ "$k" == "SN" ]] ; then
@@ -31,4 +31,6 @@ get_oem_data_xiaomi__ax3600 () {
 
 fixup_xiaomi__ax3600 () {
 	uci set wireless.@wifi-iface[0].ssid=${wlan_ssid}_IoT
+
+	uci commit wireless
 }
