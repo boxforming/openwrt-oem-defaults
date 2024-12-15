@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-load ../oemlib.sh
+load ../chunks/oemlib.sh
 
 load ../lib/test.sh
 

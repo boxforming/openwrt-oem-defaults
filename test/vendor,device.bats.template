@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-load ../oemlib.sh
+load ../chunks/oemlib.sh
 
 # TODO: fill vendor and device from /proc/device-tree/compatible
 vendor_name="vendor"
