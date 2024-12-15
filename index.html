@@ -4,14 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .github-ribbon {
+            position: absolute; top: 0; right: 0; border: 0;
+        }
+        main {
+            display: flex;
+            padding: 20px;
+            /* min-height: calc(100vh - 100px); Account for header and footer */
+        }
+        section {
+            flex: 2;
+            padding-right: 20px;
+            border-right: 1px solid #ccc;
+        }
+        aside {
+            flex: 1;
+            padding-left: 20px;
+        }
+    </style>
     <title>OpenWRT OEM Configuration Generator</title>
 </head>
 <body>
-    <h1>OpenWRT OEM Configuration Generator</h1>
-    <select id="modelSelect"></select>
-    <br>
-    <button id="generateButton">Generate</button>
-    <pre id="output"></pre>
-    <script src="script.js"></script>
+    <a href="https://github.com/boxforming/openwrt-oem-defaults" class="github-ribbon">
+        <img loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1">
+    </a>
+    <header>
+        <h1>OpenWRT OEM Configuration Generator</h1>
+    </header>
+    <main>
+        <section>
+            <h2>How it Works</h2>
+            <p>Use this tool to create an OpenWrt defaults script
+                based on your router's original factory settings,
+                such as the default password and Wi-Fi network names.
+                This is useful for initial configuration
+                or if you've reset your router to factory defaults
+                and want to use the credentials printed on the router's label.</p>
+
+            <ol>
+                <li>Choose your specific router model from the list.</li>
+                <li>Adjust any additional settings as required.</li>
+                <li>Generate the OpenWrt configuration script.</li>
+                <li>Paste the generated script into the "defaults" field on the <a href="https://firmware-selector.openwrt.org/" target="_blank" rel="noopener noreferrer">OpenWrt Firmware Selector</a>.</li>
+                <li>Download and flash the resulting firmware to your router.</li>
+            </ol>
+        </section>
+        <aside>
+            <select id="modelSelect"></select>
+            <br>
+            <button id="generateButton">Generate</button>
+            
+            <pre id="output"></pre>
+            <script src="script.js"></script>            
+        </aside>
+    </main>
 </body>
 </html>
