@@ -16,13 +16,13 @@ if [[ -z $model ]] ; then
 fi
 
 if [[ "$command" == "uci" ]] ; then
-    oemlib_functions="$(<./oemlib.sh)"
-
-    template="$(<./uci-defaults.sh.template)"
-
-    template_start="${template%### placeholder ###*}"
-    template_end="${template#*### placeholder ###}"
+    script_header="$(<./chunks/header.sh)"
     
+    oemlib_functions="$(<./chunks/oemlib.sh)"
+
+    params_include="$(<./chunks/params.sh)"
+
+    footer_include="$(<./chunks/uci-defaults.sh)"
 
     if [[ -f "$model" ]] ; then
         device_functions="$(<"$model")"
@@ -33,10 +33,11 @@ if [[ "$command" == "uci" ]] ; then
         exit 2
     fi
 
-    cat > ./uci-defaults.sh << UCI_DEFAULTS
-$template_start
+    cat > "./uci-defaults.$model.sh" << UCI_DEFAULTS
+$script_header
 $oemlib_functions
 $device_functions
-$template_end
+$params_include
+$footer_include
 UCI_DEFAULTS
 fi
