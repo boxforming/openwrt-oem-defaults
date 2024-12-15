@@ -15,6 +15,8 @@ function makeEl(tagName, attributes = {}, ...children) {
   return element;
 }
 
+const version = document.currentScript.src.split('?v=')[1];
+
 document.addEventListener('DOMContentLoaded', () => {
   const modelSelect = $('modelSelect');
   const generateButton = $('generateButton');
@@ -24,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return; // Stop if any element is not found (error already logged by $)
   }
 
-  fetch('models.json')
+  fetch(`models.json?v=${version}`)
     .then(response => response.json())
     .then(data => {
       data.forEach(model => {
@@ -39,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   generateButton.addEventListener('click', () => {
     const selectedModel = modelSelect.value;
 
-    fetch(`parsers/${selectedModel}.sh`)
+    fetch(`parsers/${selectedModel}.sh?v=${version}`)
       .then(response => response.text())
       .then(generatedContent => {
         outputElement.textContent = generatedContent;
