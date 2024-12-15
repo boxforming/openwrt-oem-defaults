@@ -41,6 +41,14 @@ jobs:
           cp -r chunks  htdocs/
           cp -r lib     htdocs/
           cp -r parsers htdocs/
+      
+      - name: Inject commit SHA into index.html
+        run: |
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            GITHUB_SHA=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.head.sha)
+          fi
+          sed -i "s/<script src=\"script.js\"/<script src=\"script.js?v=${{ env.GITHUB_SHA }}\"/" index.html
+  
       - name: Generate models.json
         run: |
           models=$(find parsers -maxdepth 1 -name "*.sh" -printf '\t"%f",\n' | sort | sed 's/\.sh",/",/g')
