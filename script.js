@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   generateButton.addEventListener('click', () => {
     const selectedModel = modelSelect.value;
 
-    fetch(`generate/${selectedModel}`)
+    fetch(`parsers/${selectedModel}.sh`)
       .then(response => response.text())
       .then(generatedContent => {
         outputElement.textContent = generatedContent;
