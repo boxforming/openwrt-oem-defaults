@@ -35,18 +35,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: docs
-          path: _site
+          path: htdocs
+      - name: Copy assets to htdocs
+        run: |
+          cp -r chunks  htdocs/
+          cp -r lib     htdocs/
+          cp -r parsers htdocs/
       - name: Generate models.json
         run: |
           models=$(find parsers -maxdepth 1 -name "*.sh" -printf '\t"%f",\n' | sort | sed 's/\.sh",/",/g')
           models="${models%,*}" # Remove the trailing comma and newline
-          printf '[\n%b\n]' "$models" > _site/models.json
+          printf '[\n%b\n]' "$models" > htdocs/models.json
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: 'htdocs'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
