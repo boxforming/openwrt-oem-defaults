@@ -47,7 +47,7 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
             GITHUB_SHA=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.head.sha)
           fi
-          sed -i "s/<script src=\"script.js\"/<script src=\"script.js?v=${{ env.GITHUB_SHA }}\"/" htdocs/index.html
+          sed -i "s/<script src=\"script.js\"/<script src=\"script.js?v=$GITHUB_SHA\"/" htdocs/index.html
   
       - name: Generate models.json
         run: |
