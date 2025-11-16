@@ -47,7 +47,9 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
             GITHUB_SHA=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.head.sha)
           fi
-          sed -i "s/<script src=\"script.js\"/<script src=\"script.js?v=$GITHUB_SHA\"/" htdocs/index.html
+          GITHUB_MAIN_SHORT_SHA="$(echo ${GITHUB_SHA} | cut -c1-8)"
+          GITHUB_DOCS_SHORT_SHA="$(git rev-parse docs | cut -c1-8)"
+          sed -i "s/<script src=\"script.js\"/<script src=\"script.js?v=$GITHUB_MAIN_SHORT_SHA-$GITHUB_DOCS_SHORT_SHA\"/" htdocs/index.html
   
       - name: Generate models.json
         run: |
