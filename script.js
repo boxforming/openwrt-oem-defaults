@@ -119,8 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
         outputElement.textContent = [
           chunks.header,
           chunks.oemlib,
-          chunks.params,
           modelDataParser,
+          "\nget_device_oem_data\n",
+          chunks.params,
           chunks.footer
         ].join("\n");
       })
