@@ -1,6 +1,6 @@
 get_oem_data_gemtek__w1700k () {
 
-    local part="dsd" # mtd9
+    local part="dsd" # mtd2
 
     wlan_phy_id=0
     wlan_5ghz_phy_id=1
@@ -21,6 +21,8 @@ get_oem_data_gemtek__w1700k () {
 			wlan_key="$v"
 		elif [[ "$k" == "wifi_ssid" ]] ; then
 			wlan_ssid="$v"
+			wlan_5ghz_ssid="$v"
+			wlan_6ghz_ssid="$v"
 			hostname="$v"
 		fi
 		offset=$(( $offset + ${#kv} + 1 ))
