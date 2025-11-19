@@ -11,11 +11,17 @@ load ../lib/test.sh
 
 @test "factory data check for $vendor_name $device_name" {
 
+    if [[ ! -f "$(find_mtd_part "$model_name")" ]] ; then
+        skip "Factory partition dump file is not present"
+    fi
+
     local parser_fn_name="$(get_oem_data_parser "$model_name")"
 
     local parser_filename="parsers/$(get_filename_from_model_name "$model_name").sh"
 
     . "$parser_filename"
+
+    . lib/test-parser-overrides.sh
 
     set -e
 
@@ -27,7 +33,7 @@ load ../lib/test.sh
     [ "$wlan_ssid" = "XXX" ]
     [ "$hostname"  = "XXX" ]
     [ "$wlan_5ghz_ssid" = "XXX" ]
-    
+
     [ "$root_password" = "RRR" ]
     [ "$serial_number" = "SSS" ]
     [ "$wlan_key"      = "WWW" ]

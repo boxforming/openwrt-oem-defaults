@@ -16,9 +16,15 @@ get_fixup_function () {
 	echo "fixup_$(get_model_function_suffix "$1")"
 }
 
+get_mtd_offset () {
+    echo "0"
+}
+
 get_mtd_cstr () {
 	local mtdname="$1"
-	local offset=$(($2))
+	local base_offset=$(($2))
+	local mtd_offset=$(get_mtd_offset "$mtdname")
+	local offset=$((mtd_offset + base_offset))
 	local limit=$((${3:-32}))
 	local part
 	local mac_dirty
