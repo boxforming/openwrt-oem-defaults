@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   generateButton.addEventListener('click', () => {
     const selectedModel = modelSelect.value;
 
-    generateConfigFile (new FormData($("params")), parsedParams);
+    const params = generateConfigFile(new FormData($("params")), parsedParams);
     
     fetchText(`parsers/${selectedModel}.sh`)
       .then(modelDataParser => {
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
           chunks.oemlib,
           modelDataParser,
           "\nget_device_oem_data\n",
-          chunks.params,
+          params,
           chunks.footer
         ].join("\n");
       })
@@ -368,7 +368,7 @@ function generateForm(params, options = {}) {
   return formGroups;
 }
 
-if (module) {
+if (typeof module !== "undefined") {
   module.exports = {
     parseConfigFile
   }
