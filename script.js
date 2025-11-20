@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formFields = generateForm(parsedParams);
 
-    for (const formFeild of formFields) {
+    for (const formField of formFields) {
       document.getElementById("params").appendChild(formField);
     }
   }).catch(error => {
