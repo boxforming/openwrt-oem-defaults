@@ -60,34 +60,36 @@ get_device_oem_data () {
 	set +e
 }
 
+gen_wifi_config () {
+    local wdevstr="wireless.@wifi-device[$1]"
+    local  wifstr="wireless.@wifi-iface[$1]"
+
+    cat << EOI
+set ${wdevstr}.disabled='0'
+set ${wdevstr}.country='${wlan_country}'
+
+set ${wifstr}.ssid='${2:-$wlan_ssid}'
+set ${wifstr}.encryption='${3:-$wlan_enc}'
+set ${wifstr}.key='${4:-$wlan_key}'
+set ${wifstr}.network='lan'
+
+set ${wifstr}.ieee80211r='${wlan_roaming:-1}'
+
+EOI
+}
+
 apply_factory_defaults () {
 
 	if [[ -n $wlan_ssid ]] && uci get "wireless.@wifi-device[${wlan_phy_id}]" && uci get "wireless.@wifi-device[${wlan_phy_id}].disabled" ; then
-		uci -q batch << EOI
-set wireless.@wifi-device[${wlan_phy_id}].disabled='0'
-set wireless.@wifi-device[${wlan_phy_id}].country='${wlan_country}'
-
-set wireless.@wifi-iface[${wlan_phy_id}].ssid='${wlan_ssid}'
-set wireless.@wifi-iface[${wlan_phy_id}].encryption='${wlan_enc}'
-set wireless.@wifi-iface[${wlan_phy_id}].key='${wlan_key}'
-set wireless.@wifi-iface[${wlan_phy_id}].network='lan'
-
-set wireless.@wifi-iface[${wlan_phy_id}].ieee80211r='1'
-EOI
+	    gen_wifi_config "${wlan_phy_id}" "${wlan_ssid}" "${wlan_enc}" "${wlan_key}" | uci -q batch
 	fi
 
 	if [[ -n $wlan_5ghz_ssid ]] && uci get "wireless.@wifi-device[${wlan_5ghz_phy_id}]" && uci get "wireless.@wifi-device[${wlan_5ghz_phy_id}].disabled" ; then
-		uci -q batch << EOI
-set wireless.@wifi-device[${wlan_5ghz_phy_id}].disabled='0'
-set wireless.@wifi-device[${wlan_5ghz_phy_id}].country='${wlan_country}'
+	    gen_wifi_config "${wlan_5ghz_phy_id}" "${wlan_5ghz_ssid}" "${wlan_5ghz_enc}" "${wlan_5ghz_key}" | uci -q batch
+	fi
 
-set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ssid='${wlan_5ghz_ssid}'
-set wireless.@wifi-iface[${wlan_5ghz_phy_id}].encryption='${wlan_5ghz_enc:-$wlan_enc}'
-set wireless.@wifi-iface[${wlan_5ghz_phy_id}].key='${wlan_5ghz_key:-$wlan_key}'
-set wireless.@wifi-iface[${wlan_5ghz_phy_id}].network='lan'
-
-set wireless.@wifi-iface[${wlan_5ghz_phy_id}].ieee80211r='1'
-EOI
+	if [[ -n $wlan_6ghz_ssid ]] && uci get "wireless.@wifi-device[${wlan_6ghz_phy_id}]" && uci get "wireless.@wifi-device[${wlan_6ghz_phy_id}].disabled" ; then
+	    gen_wifi_config "${wlan_6ghz_phy_id}" "${wlan_6ghz_ssid}" "${wlan_6ghz_enc}" "${wlan_6ghz_key}" | uci -q batch
 	fi
 
 	uci commit wireless
