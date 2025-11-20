@@ -13,6 +13,11 @@
             padding: 20px;
             /* min-height: calc(100vh - 100px); Account for header and footer */
         }
+		header .flex {
+            display: flex;
+            padding: 0 20px;
+            /* min-height: calc(100vh - 100px); Account for header and footer */
+        }
         section {
             flex: 2;
             padding-right: 20px;
@@ -31,30 +36,34 @@
     </a>
     <header>
         <h1>OpenWRT OEM Configuration Generator</h1>
-        <section>
-            <h2>How it Works</h2>
-            <p>Use this tool to create an OpenWrt defaults script
-                based on your router's original factory settings,
-                such as the default password and Wi-Fi network names.
-                This is useful for initial configuration
-                or if you've reset your router to factory defaults
-                and want to use the credentials printed on the router's label.</p>
-
-            <ol>
-                <li>Choose your specific router model from the list.</li>
-                <li>Adjust any additional settings as required.</li>
-                <li>Generate the OpenWrt configuration script.</li>
-                <li>Paste the generated script into the "defaults" field on the <a href="https://firmware-selector.openwrt.org/" target="_blank" rel="noopener noreferrer">OpenWrt Firmware Selector</a>.</li>
-                <li>Download and flash the resulting firmware to your router.</li>
-            </ol>
-        </section>
-        <aside>
-            <select id="modelSelect"></select>
-            <br>
-            <button id="generateButton">Generate</button>
-            
-            <script src="script.js"></script>            
-        </aside>
+		<div class="flex">
+	        <section>
+	            <h2>How it Works</h2>
+	            <p>Use this tool to create an OpenWrt defaults script
+	                based on your router's original factory settings,
+	                such as the default password and Wi-Fi network names.
+	                This is useful for initial configuration
+	                or if you've reset your router to factory defaults
+	                and want to use the credentials printed on the router's label.</p>
+	
+	            <ol>
+	                <li>Choose your specific router model from the list.</li>
+	                <li>Adjust any additional settings as required.</li>
+	                <li>Generate the OpenWrt configuration script.</li>
+	                <li>Paste the generated script into the "defaults" field on the <a href="https://firmware-selector.openwrt.org/" target="_blank" rel="noopener noreferrer">OpenWrt Firmware Selector</a>.</li>
+	                <li>Download and flash the resulting firmware to your router.</li>
+	            </ol>
+	        </section>
+	        <aside>
+	            <select id="modelSelect"></select>
+				<form id="params">
+				</form>
+	            <br>
+	            <button id="generateButton">Generate</button>
+	            
+	            <script src="script.js"></script>            
+	        </aside>
+		</div>
     </header>
     <main>
         <section>
