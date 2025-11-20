@@ -155,11 +155,12 @@ function parseConfigFile(fileContent) {
     
     // Check if this is a comment line with @type annotation
     if (line.startsWith('# @type')) {
-      const commentMatch = line.match(/# @type \{([^}]+)\} \[?([^\]=\s]+)(?:=([^\]]+))?\]?(.*?)(https:\/\/.*)?/);
+      const commentMatch = line.match(/# @type \{([^}]+)\} \[?([^\]=\s]+)(?:=([^\]]+))?\]?(.*)/);
       
       if (commentMatch) {
-        const [, typeStr, paramName, defaultValue, description, link] = commentMatch;
+        const [, typeStr, paramName, defaultValue, completeDescription] = commentMatch;
         const isOptional = line.includes(`[${paramName}`);
+        const [description, link] = completeDescription.split(/(?=https:\/\/)/);
         
         // Parse the type
         let type;
