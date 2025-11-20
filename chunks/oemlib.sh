@@ -31,7 +31,7 @@ get_mtd_cstr () {
 	
 	part="$(find_mtd_part "$mtdname")"
 
-	local cstring="$(dd if="$part" skip="$offset" count="$limit" bs=1 2>/dev/null | tr -s '\000' '\n' | head -n1)"
+	local cstring="$(dd if="$part" skip="$offset" count="$limit" bs=1 2>/dev/null | tr -s '\000' '\n' 2>/dev/null | head -n1)"
 
 	echo "$cstring"
 }

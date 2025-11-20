@@ -1,13 +1,3 @@
-#!/bin/sh
-
-. /lib/functions.sh
-. /lib/functions/system.sh
-
-### placeholder ###
-
-# uncomment lines below and provide proper values:
-wlan_country="US"
-wlan_enc="psk2"
 
 apply_factory_defaults
 
