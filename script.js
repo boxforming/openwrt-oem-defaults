@@ -87,6 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let chunks = {};
 
+  let parsedParams;
+
   Promise.all(
     [modelsLoader, headerLoader, oemlibLoader, paramsLoader, footerLoader]
   ).then((
@@ -100,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     generateButton.disabled = false;
 
-    const parsedParams = parseConfigFile(params);
+    parsedParams = parseConfigFile(params);
 
     const formFields = generateForm(parsedParams);
 
@@ -122,6 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
   generateButton.addEventListener('click', () => {
     const selectedModel = modelSelect.value;
 
+    generateConfigFile (new FormData($("params")), parsedParams);
+    
     fetchText(`parsers/${selectedModel}.sh`)
       .then(modelDataParser => {
         outputElement.textContent = [
@@ -362,4 +366,10 @@ function generateForm(params, options = {}) {
   }
   
   return formGroups;
+}
+
+if (module) {
+  module.exports = {
+    parseConfigFile
+  }
 }
