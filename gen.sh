@@ -37,6 +37,9 @@ if [[ "$command" == "uci" ]] ; then
 $script_header
 $oemlib_functions
 $device_functions
+
+get_device_oem_data
+
 $params_include
 $footer_include
 UCI_DEFAULTS
