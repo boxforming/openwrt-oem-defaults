@@ -61,17 +61,29 @@ get_device_oem_data () {
 }
 
 gen_wifi_config () {
-    local wdevstr="wireless.@wifi-device[$1]"
+	local wdevstr="wireless.@wifi-device[$1]"
     local  wifstr="wireless.@wifi-iface[$1]"
 
-    cat << EOI
-set ${wdevstr}.disabled='0'
+	uci -q get "${wdevstr}" >/dev/null || return 0
+
+	local iface_off
+    local device_off
+    iface_off="$(uci -q get "${wifstr}.disabled")"
+    device_off="$(uci -q get "${wdevstr}.disabled")"
+
+    if [ "$iface_off" != "1" ] && [ "$device_off" != "1" ]; then
+        return 0
+    fi
+
+    [ -n "$1" ] && cat << EOI
 set ${wdevstr}.country='${wlan_country}'
+set ${wdevstr}.disabled='0'
 
 set ${wifstr}.ssid='${2:-$wlan_ssid}'
 set ${wifstr}.encryption='${3:-$wlan_enc}'
 set ${wifstr}.key='${4:-$wlan_key}'
 set ${wifstr}.network='lan'
+set ${wifstr}.disabled='0'
 
 set ${wifstr}.ieee80211r='${wlan_roaming:-1}'
 
@@ -80,17 +92,18 @@ EOI
 
 apply_factory_defaults () {
 
-	if [[ -n $wlan_ssid ]] && uci get "wireless.@wifi-device[${wlan_phy_id}]" && uci get "wireless.@wifi-device[${wlan_phy_id}].disabled" ; then
-	    gen_wifi_config "${wlan_phy_id}" "${wlan_ssid}" "${wlan_enc}" "${wlan_key}" | uci -q batch
+	if [ -n "$wlan_ssid" ] ; then
+		gen_wifi_config "${wlan_phy_id}" "${wlan_ssid}" "${wlan_enc}" "${wlan_key}" | uci -q batch
 	fi
 
-	if [[ -n $wlan_5ghz_ssid ]] && uci get "wireless.@wifi-device[${wlan_5ghz_phy_id}]" && uci get "wireless.@wifi-device[${wlan_5ghz_phy_id}].disabled" ; then
-	    gen_wifi_config "${wlan_5ghz_phy_id}" "${wlan_5ghz_ssid}" "${wlan_5ghz_enc}" "${wlan_5ghz_key}" | uci -q batch
+	if [ -n "$wlan_5ghz_ssid" ] && [ -n "$wlan_5ghz_phy_id" ] ; then
+		gen_wifi_config "${wlan_5ghz_phy_id}" "${wlan_5ghz_ssid}" "${wlan_5ghz_enc}" "${wlan_5ghz_key}" | uci -q batch
 	fi
 
-	if [[ -n $wlan_6ghz_ssid ]] && uci get "wireless.@wifi-device[${wlan_6ghz_phy_id}]" && uci get "wireless.@wifi-device[${wlan_6ghz_phy_id}].disabled" ; then
-	    gen_wifi_config "${wlan_6ghz_phy_id}" "${wlan_6ghz_ssid}" "${wlan_6ghz_enc}" "${wlan_6ghz_key}" | uci -q batch
+	if [ -n "$wlan_6ghz_ssid" ] && [ -n "$wlan_6ghz_phy_id" ] ; then
+		gen_wifi_config "${wlan_6ghz_phy_id}" "${wlan_6ghz_ssid}" "${wlan_6ghz_enc}" "${wlan_6ghz_key}" | uci -q batch
 	fi
+
 
 	uci commit wireless
 
