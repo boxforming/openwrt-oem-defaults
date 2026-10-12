@@ -92,6 +92,17 @@ EOI
 
 apply_factory_defaults () {
 
+	set_factory_root_password "$root_password"
+
+	for i in $(seq 1 15); do
+		if [ -d /sys/class/ieee80211 ] && [ -n "$(ls -A /sys/class/ieee80211 2>/dev/null)" ]; then
+			break
+		fi
+		sleep 1
+	done
+
+	[ -f /etc/config/wireless ] || /sbin/wifi config
+
 	if [ -n "$wlan_ssid" ] ; then
 		gen_wifi_config "${wlan_phy_id}" "${wlan_ssid}" "${wlan_enc}" "${wlan_key}" | uci -q batch
 	fi
@@ -106,8 +117,6 @@ apply_factory_defaults () {
 
 
 	uci commit wireless
-
-	set_factory_root_password "$root_password"
 
 }
 
