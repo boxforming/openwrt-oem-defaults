@@ -1,6 +1,10 @@
-get_oem_data_gemtek__w1700k () {
+get_mtd_offset () {
+    echo 0x400000
+}
 
-    local part="dsd" # mtd2
+get_oem_data_gemtek__w1700k_ubi () {
+
+    local part="vendor" # mtd0
 
     wlan_phy_id=0
     wlan_5ghz_phy_id=1
@@ -16,7 +20,8 @@ get_oem_data_gemtek__w1700k () {
 
 		if [[ "$k" == "serial_number" ]] ; then
 			serial_number="$v"
-			root_password="$v"
+		elif [[ "$k" == "admin_password" ]] ; then
+			root_password="$(printf '%s\n' "$v" | cut -d '$' -f 3)"
 		elif [[ "$k" == "wifi_passphrase" ]] ; then
 			wlan_key="$v"
 		elif [[ "$k" == "wifi_ssid" ]] ; then
