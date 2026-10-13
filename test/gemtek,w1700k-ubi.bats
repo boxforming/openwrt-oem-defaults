@@ -11,21 +11,11 @@ load ../lib/test.sh
 
 @test "factory data check for $vendor_name $device_name" {
 
-    if [[ ! -f "$(find_mtd_part "$model_name")" ]] ; then
-        skip "Factory partition dump file is not present"
-    fi
-
-    local parser_fn_name="$(get_oem_data_parser "$model_name")"
-
-    local parser_filename="parsers/$(get_filename_from_model_name "$model_name").sh"
-
-    . "$parser_filename"
-
-	. lib/test-parser-overrides.sh
-
-	. "test/${model_name}.fixture"
+    prepare_test_for "$model_name"
 
     set -e
+
+	local parser_fn_name="$(get_oem_data_parser "$model_name")"
 
     $parser_fn_name
 
