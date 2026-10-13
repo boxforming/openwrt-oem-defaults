@@ -31,8 +31,8 @@ get_oem_data_gemtek__w1700k_ubi () {
 			wlan_key="$v"
 		elif [[ "$k" == "wifi_ssid" ]] ; then
 			wlan_ssid="$v"
-			wlan_5ghz_ssid="$v"
-			wlan_6ghz_ssid="$v"
+			wlan_5ghz_ssid="$v-5G"
+			wlan_6ghz_ssid="$v-6G"
 			hostname="$v"
 		fi
 		offset=$(( $offset + ${#kv} + 1 ))
