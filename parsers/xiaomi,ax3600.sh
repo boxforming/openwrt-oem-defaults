@@ -1,6 +1,11 @@
+get_part_name () {
+	echo "bdata" # mtd9
+}
+
 get_oem_data_xiaomi__ax3600 () {
 		
-    local part="bdata" # mtd9
+    local part
+    part="$(get_part_name)"
 
     wlan_phy_id=2
     wlan_5ghz_phy_id=1

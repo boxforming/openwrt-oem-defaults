@@ -2,9 +2,14 @@ get_mtd_offset () {
     echo "0x21000"
 }
 
+get_part_name () {
+	echo "Factory" # mtd2
+}
+
 get_oem_data_beeline__smartbox_turbo_plus () {
 
-	local part="Factory" # mtd2
+	local part
+	part="$(get_part_name)"
 
 	wlan_phy_id=0
 	wlan_5ghz_phy_id=1

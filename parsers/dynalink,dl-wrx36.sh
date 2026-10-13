@@ -2,10 +2,15 @@ get_mtd_offset () {
     echo 0x30100
 }
 
+get_part_name () {
+	# echo "0:ART" # OEM firmware partition
+	echo "0:art" # mtd17
+}
+
 get_oem_data_dynalink__dl_wrx36 () {
 # askey__rt5010w_d350_rev0 () { # OEM firmware id
-	# local part="0:ART" # OEM firmware partition
-	local part="0:art" # mtd17
+	local part
+	part="$(get_part_name)"
 
 	# iw phy0 info | egrep '\* 5\d\d\d MHz'
 	wlan_phy_id=1

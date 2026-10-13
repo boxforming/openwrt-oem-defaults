@@ -1,7 +1,12 @@
 
+get_part_name () {
+	echo "Factory" # mtd2
+}
+
 get_oem_data_beeline__smartbox_pro () {
 
-	local part="Factory" # mtd2
+	local part
+	part="$(get_part_name)"
 
 	wlan_phy_id=1
 	wlan_5ghz_phy_id=0

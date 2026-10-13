@@ -2,9 +2,14 @@ get_mtd_offset () {
     echo 0x400000
 }
 
+get_part_name () {
+	echo "vendor" # mtd0
+}
+
 get_oem_data_gemtek__w1700k_ubi () {
 
-    local part="vendor" # mtd0
+    local part
+    part="$(get_part_name)"
 
     wlan_phy_id=0
     wlan_5ghz_phy_id=1
