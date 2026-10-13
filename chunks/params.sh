@@ -15,7 +15,7 @@ wlan_6ghz_enc="sae"
 wlan_roaming=1
 
 # @type {string} [ipv4_address] IPv4 router address for LAN
-# ipv4_address="10.10.1.254"
+# ipv4_address="192.168.100.1"
 
 # @type {string} [timezonename] Time zone name
 timezonename="Europe/Madrid"
